@@ -28,7 +28,7 @@ __pycache__
 # App Specific
 .vscode
 *.toml
-
+.devcontainer/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
