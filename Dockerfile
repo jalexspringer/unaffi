@@ -75,8 +75,7 @@ RUN set -ex \
         /usr/share/doc \
         /usr/share/doc-base
 
-RUN pip install 'netimpact==0.2.1'
-RUN pip install boto3 && pip install boto
+RUN pip install 'netimpact==0.2.2'
 
 COPY script/entrypoint.sh /entrypoint.sh
 COPY config/airflow.cfg ${AIRFLOW_USER_HOME}/airflow.cfg

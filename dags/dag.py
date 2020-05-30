@@ -56,6 +56,8 @@ dag = DAG("network_update_admitad1",
             default_args=default_args,
             schedule_interval=timedelta(1))
 
+start_task = DummyOperator(task_id='start', dag=dag)
+
 awin_partners = BashOperator(
     task_id='Awin Partner Update',
     bash_command='netimpact -p awin'
@@ -73,22 +75,26 @@ linkshare_partners = BashOperator(
 
 awin_transactions = BashOperator(
     task_id='Awin Partner Update',
-    bash_command='netimpact -t --no-upload awin'
+    bash_command='netimpact -td {{ ds }} -s cross-network-asos --no-upload awin'
 )
 
 admitad_transactions = BashOperator(
     task_id='Admitad Partner Update',
-    bash_command='netimpact -t --no-upload admitad'
+    bash_command='netimpact -td {{ ds }} -s cross-network-asos --no-upload admitad'
 )
 
 linkshare_transactions = BashOperator(
     task_id='Awin Partner Update',
-    bash_command='netimpact -t --no-upload linkshare'
+    bash_command='netimpact -td {{ ds }} -s cross-network-asos --no-upload linkshare'
 )
 
-op = DummyOperator(task_id='dummy', dag=dag)
+# TODO :: Modify action status in transactions based on modifications file
+end_task = DummyOperator(task_id='end', dag=dag)
 
-op >> [awin_partners, admitad_partners, linkshare_partners]
+
+
+start_task >> [awin_partners, admitad_partners, linkshare_partners]
 awin_partners >> awin_transactions
 admitad_partners >> admitad_transactions
 linkshare_partners >> linkshare_transactions
+[awin_transactions,admitad_transactions,linkshare_transactions] >> end_task
