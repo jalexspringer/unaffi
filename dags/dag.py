@@ -13,29 +13,6 @@ from netimpact import awin, admitad, linkshare
 
 c = toml.load('/usr/local/airflow/dags/config.toml')
 
-def awin_get_transactions(accts, execution_date, **_):
-    hook = S3Hook('s3')
-    date_format = '%Y-%m-%d'
-    start = (execution_date - timedelta(1)).strftime(date_format)
-    end = (execution_date - timedelta(1)).strftime(date_format)
-    for acct,_ in accts.items():
-        a = awin.AWin(c['Awin']['oauth'])
-        transactions_dict = a.transaction_request(acct, start, end, 'pending')
-        logging.info(type(transactions_dict))
-        hook.load_string(transactions_dict, f'pending/{acct}/{end}.json', 'cross-network-asos')
-
-def admitad_get_transactions(accts, execution_date, **_):
-    hook = S3Hook('s3')
-    date_format = '%d.%m.%Y'
-    start = (execution_date - timedelta(2)).strftime(date_format)
-    end = (execution_date - timedelta(1)).strftime(date_format)
-    acct_name = c['Admitad']['account_name']
-    for acct,_ in accts.items():
-        a = admitad.Admitad(c['Admitad']['client_id'], c['Admitad']['client_secret'])
-        transactions_dict = a.transaction_request(acct_name, start, end, 'pending')
-        logging.info(type(transactions_dict))
-        hook.load_string(transactions_dict, f'pending/{acct}/{end}.json', 'cross-network-asos')
-
 
 default_args = {
     "owner": "airflow",
@@ -52,40 +29,46 @@ default_args = {
     # 'end_date': datetime(2016, 1, 1),
 }
 
-dag = DAG("network_update_admitad1",
+dag = DAG("network_update",
             default_args=default_args,
             schedule_interval=timedelta(1))
 
 start_task = DummyOperator(task_id='start', dag=dag)
 
 awin_partners = BashOperator(
-    task_id='Awin Partner Update',
-    bash_command='netimpact -p awin'
+    task_id='awin_partner_update',
+    bash_command='netimpact -c /usr/local/airflow/dags/config.toml -p awin',
+    dag=dag
 )
 
 admitad_partners = BashOperator(
-    task_id='Admitad Partner Update',
-    bash_command='netimpact -p admitad'
+    task_id='admitad_partner_update',
+    bash_command='netimpact -c /usr/local/airflow/dags/config.toml -p admitad',
+    dag=dag
 )
 
 linkshare_partners = BashOperator(
-    task_id='Awin Partner Update',
-    bash_command='netimpact -p linkshare'
+    task_id='linkshare_partner_update',
+    bash_command='netimpact -c /usr/local/airflow/dags/config.toml -p linkshare',
+    dag=dag
 )
 
 awin_transactions = BashOperator(
-    task_id='Awin Partner Update',
-    bash_command='netimpact -td {{ ds }} -s cross-network-asos --no-upload awin'
+    task_id='awin_transaction_update',
+    bash_command='netimpact -c /usr/local/airflow/dags/config.toml -td {{ ds }} -s cross-network-asos --no_upload awin',
+    dag=dag
 )
 
 admitad_transactions = BashOperator(
-    task_id='Admitad Partner Update',
-    bash_command='netimpact -td {{ ds }} -s cross-network-asos --no-upload admitad'
+    task_id='admitad_transaction_update',
+    bash_command='netimpact -c /usr/local/airflow/dags/config.toml -td {{ ds }} -s cross-network-asos --no_upload admitad',
+    dag=dag
 )
 
 linkshare_transactions = BashOperator(
-    task_id='Awin Partner Update',
-    bash_command='netimpact -td {{ ds }} -s cross-network-asos --no-upload linkshare'
+    task_id='linkshare_transaction_update',
+    bash_command='netimpact -c /usr/local/airflow/dags/config.toml -td {{ ds }} -s cross-network-asos --no_upload linkshare',
+    dag=dag
 )
 
 # TODO :: Modify action status in transactions based on modifications file
