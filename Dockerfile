@@ -75,7 +75,7 @@ RUN set -ex \
         /usr/share/doc \
         /usr/share/doc-base
 
-RUN pip install 'netimpact'
+RUN pip install 'netimpact==0.2.1'
 RUN pip install boto3 && pip install boto
 
 COPY script/entrypoint.sh /entrypoint.sh

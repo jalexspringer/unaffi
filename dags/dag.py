@@ -3,7 +3,7 @@ Code that goes along with the Airflow located at:
 http://airflow.readthedocs.org/en/latest/tutorial.html
 """
 from airflow import DAG
-from airflow.operators import PythonOperator, DummyOperator
+from airflow.operators import PythonOperator, DummyOperator, BashOperator
 from airflow.hooks.S3_hook import S3Hook
 
 from datetime import datetime, timedelta
@@ -56,22 +56,39 @@ dag = DAG("network_update_admitad1",
             default_args=default_args,
             schedule_interval=timedelta(1))
 
-# awin_pending_transactions = PythonOperator(
-#     task_id="awin_pending",
-#     python_callable=awin_get_transactions,
-#     op_kwargs = {
-#         'accts': c['Awin']['account_ids'],
-#     },
-#     provide_context=True,
-#     dag=dag)
+awin_partners = BashOperator(
+    task_id='Awin Partner Update',
+    bash_command='netimpact -p awin'
+)
 
-admitad_pending_transactions = PythonOperator(
-    task_id="admitad_pending",
-    python_callable=admitad_get_transactions,
-    op_kwargs = {
-        'accts': c['Admitad']['account_ids'],
-    },
-    provide_context=True,
-    dag=dag)
+admitad_partners = BashOperator(
+    task_id='Admitad Partner Update',
+    bash_command='netimpact -p admitad'
+)
+
+linkshare_partners = BashOperator(
+    task_id='Awin Partner Update',
+    bash_command='netimpact -p linkshare'
+)
+
+awin_transactions = BashOperator(
+    task_id='Awin Partner Update',
+    bash_command='netimpact -t --no-upload awin'
+)
+
+admitad_transactions = BashOperator(
+    task_id='Admitad Partner Update',
+    bash_command='netimpact -t --no-upload admitad'
+)
+
+linkshare_transactions = BashOperator(
+    task_id='Awin Partner Update',
+    bash_command='netimpact -t --no-upload linkshare'
+)
 
 op = DummyOperator(task_id='dummy', dag=dag)
+
+op >> [awin_partners, admitad_partners, linkshare_partners]
+awin_partners >> awin_transactions
+admitad_partners >> admitad_transactions
+linkshare_partners >> linkshare_transactions
