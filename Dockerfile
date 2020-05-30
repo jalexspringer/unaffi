@@ -61,7 +61,6 @@ RUN set -ex \
     && pip install pyasn1 \
     && pip install apache-airflow[crypto,celery,postgres,hive,jdbc,mysql,ssh${AIRFLOW_DEPS:+,}${AIRFLOW_DEPS}]==${AIRFLOW_VERSION} \
     && pip install 'redis==3.2' \
-    && pip install 'netimpact' \
     && pip uninstall -y SQLAlchemy \
     && pip install 'SQLAlchemy==1.3.15' \
     && if [ -n "${PYTHON_DEPS}" ]; then pip install ${PYTHON_DEPS}; fi \
@@ -76,7 +75,8 @@ RUN set -ex \
         /usr/share/doc \
         /usr/share/doc-base
 
-
+RUN pip install 'netimpact'
+RUN pip install boto3 && pip install boto
 
 COPY script/entrypoint.sh /entrypoint.sh
 COPY config/airflow.cfg ${AIRFLOW_USER_HOME}/airflow.cfg
