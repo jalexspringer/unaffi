@@ -75,7 +75,7 @@ RUN set -ex \
         /usr/share/doc \
         /usr/share/doc-base
 
-RUN pip install 'netimpact==0.2.4'
+RUN pip install 'netimpact==0.2.5'
 
 COPY script/entrypoint.sh /entrypoint.sh
 COPY config/airflow.cfg ${AIRFLOW_USER_HOME}/airflow.cfg
